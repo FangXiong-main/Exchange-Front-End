@@ -9,10 +9,11 @@ const request = axios.create({
 //axios的请求 request 拦截器--获取在本地储存的用户数据，将其中的token数据添加到请求头中并带到服务器中去(只有由request发送的请求才会被拦截)
 request.interceptors.request.use(
   (config)=>{ //成功回调
-    const LoginUser = JSON.parse(localStorage.getItem('LoginUser'));
+    const LoginUser = JSON.parse(localStorage.getItem('loginForm'));
     if(LoginUser && LoginUser.token){
       config.headers.token = LoginUser.token;
       config.headers.id = LoginUser.id;
+      config.headers.role = LoginUser.role;
     }
     return config;
   },

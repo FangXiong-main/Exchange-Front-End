@@ -2,16 +2,11 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import LayoutView  from '@/views/layout/index.vue';
 import IndexView from '@/views/index/index.vue';
-import ClazzView from '@/views/clazz/index.vue';
-import StudentView from '@/views/stu/index.vue';
-import EmpView from '@/views/emp/index.vue';
+import DashboardView from '@/views/dashboard/index.vue';
 import LoginView from '@/views/login/index.vue';
-import DeptView from '@/views/dept/index.vue';
-import EmpReport from '@/views/report/emp/index.vue';
-import StuReport from '@/views/report/stu/index.vue';
-import LogView from '@/views/log/index.vue';
-import JobView from '@/views/job/index.vue';
-import SubView from '@/views/subject/index.vue';
+import GoodsView from '@/views/goods/index.vue';
+import UserView from '@/views/user/index.vue';
+import { User } from '@element-plus/icons-vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -34,49 +29,19 @@ const router = createRouter({
           component:IndexView
         },
         {
-          path:'clazz',
-          name:'clazz',
-          component:ClazzView
+          path:'dashboard',
+          name:'dashboard',
+          component:DashboardView
         },
         {
-          path:'stu',
-          name:'stu',
-          component:StudentView
+          path:'goods',
+          name:'goods',
+          component:GoodsView
         },
         {
-          path:'emp',
-          name:'emp',
-          component:EmpView
-        },
-        {
-          path:'dept',
-          name:'dept',
-          component:DeptView
-        },
-        {
-          path:'empReport',
-          name:'empReport',
-          component:EmpReport
-        },
-        {
-          path:'stuReport',
-          name:'stuReport',
-          component:StuReport
-        },
-        {
-          path:'log',
-          name:'log',
-          component:LogView
-        },
-        {
-          path:'jobs',
-          name:'jobs',
-          component:JobView
-        },
-        {
-          path:'subjects',
-          name:'subjects',
-          component:SubView
+          path:'user',
+          name:'user',
+          component:UserView
         }
       ]
     },

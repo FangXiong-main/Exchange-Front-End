@@ -1,23 +1,21 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { queryByIdApi } from '@/api/job.js';
+import { detLoginApi } from '@/api/login.js';
 import { useRouter } from 'vue-router';
 import { loginApi } from '@/api/login.js';
 
-const loginForm = ref({ username: '', password: '' });
+const type = 2;
+const loginForm = ref({ username: '', password: '' , role:2 });
 const router = useRouter();
 const loading = ref(false);
 
 const detectIsLogin = async () => {
-  const user = JSON.parse(localStorage.getItem('LoginUser'));
-  if (user && user.id) {
-    const result = await queryByIdApi(0);
+    const result = await detLoginApi();
     if (result.code) {
       router.push('/');
       ElMessage.warning('您已登录');
     }
-  }
 };
 
 const resetForm = () => {
@@ -28,10 +26,9 @@ const resetForm = () => {
 const onLogin = async () => {
   loading.value = true;
   const result = await loginApi(loginForm.value);
-  
   if (result.code) {
     ElMessage.success('登录成功');
-    localStorage.setItem('LoginUser', JSON.stringify(result.data));
+    localStorage.setItem('loginForm', JSON.stringify(result.data));
     router.push('/index');
   } else {
     loading.value = false;
