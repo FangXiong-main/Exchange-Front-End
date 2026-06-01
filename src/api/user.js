@@ -11,3 +11,15 @@ export const banUserApi = (data) => RequestApi.post('/user/ban', data)
 
 // 解除封禁
 export const unBanUserApi = (data) => RequestApi.post('/user/unban', data)
+
+// ======================
+// 用户信息修改审核接口
+// ======================
+// 获取待审核分页列表
+export const getUserInfoChangePageApi = (params) => RequestApi.get('/user/info-change/page', { params })
+
+// 审核用户信息修改（通过/驳回）
+export const auditUserInfoChangeApi = (data) => RequestApi.post('/user/info-change/audit', data)
+
+//获取学校列表
+export const getSchoolListApi = ()=> RequestApi.get('/user/schoolList')

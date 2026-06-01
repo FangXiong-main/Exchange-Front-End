@@ -145,7 +145,7 @@ onMounted(() => {
   <div class="dashboard-wrap">
     <div class="dashboard-container">
       <div class="dashboard-title">
-        <h2>用户管理</h2>
+        <h2>用户修改信息</h2>
         <p>Exchange! 后台管理系统</p>
       </div>
 

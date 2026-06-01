@@ -144,7 +144,10 @@ const logOut = () => {
               <el-icon><Histogram /></el-icon>处理待审核商品
             </el-menu-item>
             <el-menu-item index="/user">
-              <el-icon><Histogram /></el-icon>用户管理
+              <el-icon><Histogram /></el-icon>用户账号管理
+            </el-menu-item>
+            <el-menu-item index="/auditUserInfo">
+              <el-icon><Histogram /></el-icon>用户修改信息审核
             </el-menu-item>
           </el-menu>
         </el-aside>

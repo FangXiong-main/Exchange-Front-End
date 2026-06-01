@@ -6,6 +6,7 @@ import DashboardView from '@/views/dashboard/index.vue';
 import LoginView from '@/views/login/index.vue';
 import GoodsView from '@/views/goods/index.vue';
 import UserView from '@/views/user/index.vue';
+import AuditUserInfoView from '@/views/auditUserInfo/index.vue';
 import { User } from '@element-plus/icons-vue';
 
 const router = createRouter({
@@ -42,6 +43,11 @@ const router = createRouter({
           path:'user',
           name:'user',
           component:UserView
+        },
+        {
+          path:'auditUserInfo',
+          name:'auditUserInfo',
+          component:AuditUserInfoView
         }
       ]
     },
