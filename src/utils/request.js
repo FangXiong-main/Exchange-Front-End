@@ -14,6 +14,7 @@ request.interceptors.request.use(
       config.headers.token = LoginUser.token;
       config.headers.id = LoginUser.id;
       config.headers.role = LoginUser.role;
+      config.headers.school = LoginUser.school;
     }
     return config;
   },

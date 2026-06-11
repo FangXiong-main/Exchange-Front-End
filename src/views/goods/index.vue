@@ -18,6 +18,9 @@ import {
 } from '@/api/goods.js';
 
 const router = useRouter();
+// 统一 baseURL 和 request.js 保持一致
+const baseURL = '/api';
+
 const loading = ref(false);
 const rejectedLoading = ref(false);
 
@@ -62,7 +65,15 @@ const getList = async () => {
       pageSize: pageSize.value
     });
     if (res.code === 200) {
-      goodsList.value = res.data.list;
+      // 批量拼接图片完整地址
+      goodsList.value = res.data.list.map(item => {
+        if (item.images) {
+          item.images = item.images.split(',')
+            .map(img => `${baseURL}/${img}`)
+            .join(',');
+        }
+        return item;
+      });
       total.value = res.data.total;
     }
   } catch (e) {
@@ -81,7 +92,15 @@ const getRejectedList = async () => {
       pageSize: rejectedPageSize.value
     });
     if (res.code === 200) {
-      rejectedGoodsList.value = res.data.list;
+      // 批量拼接图片完整地址
+      rejectedGoodsList.value = res.data.list.map(item => {
+        if (item.images) {
+          item.images = item.images.split(',')
+            .map(img => `${baseURL}/${img}`)
+            .join(',');
+        }
+        return item;
+      });
       rejectedTotal.value = res.data.total;
     }
   } catch (e) {
@@ -119,6 +138,13 @@ const openDetail = async (id) => {
   const res = await getGoodsDetailApi(id);
   if (res.code === 200) {
     currentGoods.value = res.data;
+    // 拼接详情页图片地址
+    if (currentGoods.value.images) {
+      currentGoods.value.images = currentGoods.value.images
+        .split(',')
+        .map(img => `${baseURL}/${img}`)
+        .join(',');
+    }
     rejectReason.value = currentGoods.value.rejectReason || '';
     detailDialog.value = true;
   }
@@ -167,6 +193,7 @@ const deleteHandle = async () => {
     getRejectedList();
   }
 };
+
 const closeDialog = () => {
   detailDialog.value = false;
 };
@@ -287,19 +314,22 @@ const closeDialog = () => {
           <p><label>发布人：</label>{{ currentGoods.username ?? '未知' }}</p>
           <p><label>发布时间：</label>{{ currentGoods.createTime }}</p>
           
-          <div v-if="currentGoods.images" style="margin:12px 0;">
+          <div style="margin:12px 0;">
             <label style="font-weight:600;">商品图片：</label>
-            <div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;">
-              <img 
-                v-for="(img, idx) in currentGoods.images.split(',')" 
+            <!-- 判断 null / 空值 -->
+            <div v-if="currentGoods.images" style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;">
+              <el-image
+                v-for="(img, idx) in currentGoods.images.split(',')"
                 :key="idx"
-                :src="img" 
-                style="width:100px; height:100px; object-fit:cover; border-radius:8px;"
-              >
+                :src="img"
+                :preview-src-list="currentGoods.images.split(',')"
+                style="width:100px; height:100px; object-fit:cover; border-radius:8px; cursor:pointer;"
+                fit="cover"
+              />
             </div>
-          </div>
-          <div v-else style="color:#999; margin:12px 0;">
-            暂无商品图片
+            <div v-else style="color:#999; margin-top:8px;">
+              该商品未上传图片
+            </div>
           </div>
 
           <div class="detail-info">

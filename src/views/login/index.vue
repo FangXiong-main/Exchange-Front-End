@@ -1,9 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import { detLoginApi } from '@/api/login.js';
+import { detLoginApi, loginApi } from '@/api/login.js';
+// 导入院校列表接口
+import { getSchoolListApi } from '@/api/user.js';
 import { useRouter } from 'vue-router';
-import { loginApi } from '@/api/login.js';
 
 const type = 2;
 const loginForm = ref({ username: '', password: '' , role:2 });
@@ -29,6 +30,16 @@ const onLogin = async () => {
   if (result.code) {
     ElMessage.success('登录成功');
     localStorage.setItem('loginForm', JSON.stringify(result.data));
+
+    // 登录成功后 请求院校列表 无参
+    try {
+      const schoolRes = await getSchoolListApi();
+      // 直接将返回的 Map 结构数据存入本地 schoolList
+      localStorage.setItem('schoolList', JSON.stringify(schoolRes.data));
+    } catch (err) {
+      ElMessage.warning('院校列表加载失败');
+    }
+
     router.push('/index');
   } else {
     loading.value = false;
@@ -44,7 +55,7 @@ onMounted(() => {
 <template>
   <div id="container">
     <div class="login-form" v-if="!loading">
-      <img src="@/assets/ExchangeLogo.png" alt="" style="width: 100px; margin: 0 auto; display: block;">
+      <img src="@/assets/exchange-logo.png" alt="" style="width: 100px; margin: 0 auto; display: block;">
       <p class="title">Exchange!后台管理系统</p>
 
       <el-form label-width="90px"> 
@@ -58,7 +69,7 @@ onMounted(() => {
 
         <el-form-item>
           <el-button class="glass-btn" type="primary" @click="onLogin">登 录</el-button>
-          <el-button class="glass-btn" type="info" @reset="resetForm">重 置</el-button>
+          <el-button class="glass-btn" type="info" @click="resetForm">重 置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -138,7 +149,7 @@ onMounted(() => {
 #container {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(120deg, #2c3e70, #6a4c93, #b65c8c, #4a60a1);
+  background: linear-gradient(120deg, #bde9ff, #46c4ff, #00d5ff, #0163a9);
   background-size: 400% 400%;
   animation: bgGradient 12s ease infinite;
   display: flex;

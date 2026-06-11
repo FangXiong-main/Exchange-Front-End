@@ -1,86 +1,45 @@
 <script setup>
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { User, EditPen, SwitchButton, Promotion, Histogram } from '@element-plus/icons-vue';
+import { User, SwitchButton, Promotion, Histogram } from '@element-plus/icons-vue';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { logoutApi } from '@/api/login.js';
-import { loginApi } from '@/api/login.js';
 
 const router = useRouter();
 const userName = ref('');
 
 onMounted(() => {
   const userStr = localStorage.getItem('loginForm');
+  const schoolStr = localStorage.getItem('schoolList');
+
   if (userStr) {
     const user = JSON.parse(userStr);
-    userName.value = user.username || '用户';
+    const userId = user.school; // 学校ID
+    let schoolName = '';
+
+    // 匹配学校名称
+    if (schoolStr) {
+      const schoolMap = JSON.parse(schoolStr);
+      // 结构：{ 1: { "1": "青海民族大学" } }
+      const target = schoolMap[userId];
+      if (target) {
+        // 取内层第一个值作为学校名
+        schoolName = Object.values(target)[0] || '';
+      }
+    }
+
+    // 拼接：用户名（学校名）
+    if (schoolName) {
+      userName.value = `${user.username || '用户'}（${schoolName}）`;
+    } else {
+      userName.value = user.username || '用户';
+    }
   } else {
     userName.value = '未登录';
   }
 });
 
-const loginForm = ref({ username: '', password: '' });
-const passwordForm = ref({ fPassword: '', sPassword: '' });
-const userNew = ref({ password: '', type: 2 });
-const ruleFormRef = ref(null);
-
-const rules = {
-  fPassword: [{ required: true, message: '请输入新密码', trigger: 'blur', min: 6 }],
-  sPassword: [{ required: true, message: '请确认密码', trigger: 'blur' }]
-};
-
-const confirmDialogFormVisible = ref(false);
-const newDialogFormVisible = ref(false);
-
-const modifyButton = () => {
-  const userStr = localStorage.getItem('loginForm');
-  if (!userStr) return;
-  const user = JSON.parse(userStr);
-  loginForm.value.username = user.username;
-  userNew.value.id = user.id;
-  confirmDialogFormVisible.value = true;
-};
-
-const onConfirm = async () => {
-  const res = await loginApi(loginForm.value);
-  if (res.code === 200) {
-    confirmDialogFormVisible.value = false;
-    newDialogFormVisible.value = true;
-  } else {
-    ElMessage.error('原密码错误');
-  }
-};
-
-const onCancel = () => {
-  confirmDialogFormVisible.value = false;
-  newDialogFormVisible.value = false;
-};
-
-const modifyPassword = async () => {
-  if (!ruleFormRef.value) return;
-  const valid = await ruleFormRef.value.validate();
-  if (!valid) return;
-
-  if (passwordForm.value.fPassword !== passwordForm.value.sPassword) {
-    ElMessage.error('两次密码不一致');
-    return;
-  }
-
-  userNew.value.password = passwordForm.value.fPassword;
-  const res = await updateApi(userNew.value);
-  if (res.code === 200) {
-    const res = await logoutApi(JSON.parse(localStorage.getItem('loginForm')));
-    if (res.code === 200) {
-      localStorage.removeItem('loginForm');
-      router.push('/login');
-      ElMessage.success('退出成功');
-    }
-    ElMessage.success('密码修改成功，请重新登录');
-  } else {
-    ElMessage.error('修改失败');
-  }
-};
-
+// 退出登录
 const logOut = () => {
   ElMessageBox.confirm(
     '确定要退出登录吗？',
@@ -92,9 +51,11 @@ const logOut = () => {
       customClass: 'liquid-msg-box'
     }
   ).then(async () => {
-    const res = await logoutApi(JSON.parse(localStorage.getItem('loginForm')));
+    const userInfo = JSON.parse(localStorage.getItem('loginForm') || '{}');
+    const res = await logoutApi(userInfo);
     if (res.code === 200) {
       localStorage.removeItem('loginForm');
+      localStorage.removeItem('schoolList');
       router.push('/login');
       ElMessage.success('退出成功');
     }
@@ -110,7 +71,7 @@ const logOut = () => {
       <!-- 顶部固定 -->
       <el-header class="glass-header">
         <div class="header-left">
-          <img class="logo" src="../../assets/Logo.png" alt="Logo" />
+          <img class="logo" src="@/assets/exchange-logo.png" alt="Logo" />
           <span class="title">Exchange!后台管理系统</span>
         </div>
 
@@ -120,13 +81,10 @@ const logOut = () => {
             <span>{{ userName }}</span>
           </div>
 
-          <el-button round class="liquid-btn blue" @click="modifyButton">
-            <el-icon><EditPen /></el-icon>修改密码
-          </el-button>
-
           <el-button round class="liquid-btn pink" @click="logOut">
             <el-icon><SwitchButton /></el-icon>退出登录
           </el-button>
+          
         </div>
       </el-header>
 
@@ -149,10 +107,13 @@ const logOut = () => {
             <el-menu-item index="/auditUserInfo">
               <el-icon><Histogram /></el-icon>用户修改信息审核
             </el-menu-item>
+            <el-menu-item index="/post">
+              <el-icon><Histogram /></el-icon>平台帖子管理
+            </el-menu-item>
           </el-menu>
         </el-aside>
 
-        <!-- 右侧内容（正常滚动，不重叠） -->
+        <!-- 右侧内容 -->
         <el-main class="glass-main">
           <router-view />
         </el-main>
@@ -164,33 +125,6 @@ const logOut = () => {
       <br />
       <span>All Rights Reserved</span>
     </footer>
-
-    <el-dialog v-model="confirmDialogFormVisible" width="420px" title="验证身份" class="liquid-dialog">
-      <el-form :model="loginForm" label-width="100px">
-        <el-form-item label="原密码">
-          <el-input v-model="loginForm.password" type="password" show-password />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button round @click="onCancel">取消</el-button>
-        <el-button round type="primary" @click="onConfirm">下一步</el-button>
-      </template>
-    </el-dialog>
-
-    <el-dialog v-model="newDialogFormVisible" width="420px" title="设置新密码" class="liquid-dialog">
-      <el-form :model="passwordForm" ref="ruleFormRef" :rules="rules" label-width="100px">
-        <el-form-item label="新密码" prop="fPassword">
-          <el-input v-model="passwordForm.fPassword" type="password" show-password />
-        </el-form-item>
-        <el-form-item label="确认密码" prop="sPassword">
-          <el-input v-model="passwordForm.sPassword" type="password" show-password />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button round @click="onCancel">取消</el-button>
-        <el-button round type="primary" @click="modifyPassword">保存修改</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -205,12 +139,12 @@ const logOut = () => {
 .layout-container {
   width: 100vw;
   min-height: 100vh;
-  background: linear-gradient(-45deg, #f0f8ff, #e6f4ff, #fde2ff, #fef0ff);
+  background: linear-gradient(-45deg, hsl(190, 100%, 86%), #e6f4ff, #b7f2ff, #b7e8ff);
   background-size: 400% 400%;
   animation: flowGradient 16s ease infinite;
 }
 
-/* ========== 头部固定 ========== */
+/* 头部 */
 .glass-header {
   height: 70px;
   display: flex;
@@ -228,7 +162,7 @@ const logOut = () => {
   right: 0;
 }
 
-/* ========== 左侧菜单固定 ========== */
+/* 左侧菜单 */
 .glass-aside {
   width: 230px;
   background: rgba(255, 255, 255, 0.35);
@@ -241,7 +175,7 @@ const logOut = () => {
   z-index: 998;
 }
 
-/* ========== 右侧内容（自动避开菜单，不重叠） ========== */
+/* 主内容区 */
 .glass-main {
   margin-left: 230px;
   padding-top: 70px;
@@ -249,7 +183,6 @@ const logOut = () => {
   width: 100%;
 }
 
-/* ========== 其他样式不变 ========== */
 .el-container > .el-container {
   display: flex;
 }
@@ -302,13 +235,8 @@ const logOut = () => {
   transition: all 0.3s;
 }
 
-.liquid-btn.blue:hover {
-  background: rgba(100, 150, 255, 0.15);
-  color: #3366ff;
-}
-
 .liquid-btn.pink:hover {
-  background: rgba(255, 120, 180, 0.15);
+  background: rgba(120, 215, 255, 0.15);
   color: #ff5799;
 }
 
@@ -338,13 +266,6 @@ const logOut = () => {
   border-top: 1px solid rgba(255, 255, 255, 0.5);
   color: #555;
   font-size: 13px;
-}
-
-:deep(.liquid-dialog .el-dialog) {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(30px);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
 :deep(.liquid-msg-box) {
