@@ -110,6 +110,9 @@ const logOut = () => {
             <el-menu-item index="/post">
               <el-icon><Histogram /></el-icon>平台帖子管理
             </el-menu-item>
+            <el-menu-item index="/orderOperate">
+              <el-icon><Histogram /></el-icon>订单管理
+            </el-menu-item>
           </el-menu>
         </el-aside>
 

@@ -3,12 +3,12 @@ import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
 
-// 图标完整导入
+// 替换图标：ShoppingCart → Document，Calendar → Lock
 import {
   UserFilled,
   GoodsFilled,
-  ShoppingCart,
-  Calendar
+  Document,
+  Lock
 } from '@element-plus/icons-vue';
 
 import {
@@ -20,11 +20,12 @@ import {
 const router = useRouter();
 const loading = ref(false);
 
+// 同步后端字段
 const dashboardData = ref({
   userCount: 0,
   goodsCount: 0,
-  orderCount: 0,
-  todayOrderCount: 0
+  postCount: 0,
+  bandedUserCount: 0
 });
 
 const recentGoods = ref([]);
@@ -107,23 +108,24 @@ const goPage = (path) => {
           </div>
         </div>
 
+        <!-- 改为 帖子数量 + Document 图标 -->
         <div class="glass-card">
           <div class="card-icon blue">
-            <el-icon><ShoppingCart /></el-icon>
+            <el-icon><Document /></el-icon>
           </div>
           <div class="card-info">
-            <p class="card-label">订单总数</p>
-            <p class="card-number">{{ dashboardData.orderCount }}</p>
+            <p class="card-label">帖子数量</p>
+            <p class="card-number">{{ dashboardData.postCount }}</p>
           </div>
         </div>
 
         <div class="glass-card">
-          <div class="card-icon green">
-            <el-icon><Calendar /></el-icon>
+          <div class="card-icon red">
+            <el-icon color="red"><Lock /></el-icon>
           </div>
           <div class="card-info">
-            <p class="card-label">今日订单</p>
-            <p class="card-number">{{ dashboardData.todayOrderCount }}</p>
+            <p class="card-label">被封禁用户</p>
+            <p class="card-number">{{ dashboardData.bandedUserCount }}</p>
           </div>
         </div>
       </div>
@@ -362,6 +364,11 @@ const goPage = (path) => {
   font-weight: 600;
   color: #222;
   margin-bottom: 16px;
+}
+
+.card-icon.red {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ef4444;
 }
 
 :deep(.el-table) {

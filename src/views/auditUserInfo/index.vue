@@ -8,6 +8,9 @@ import {
   getSchoolListApi
 } from '@/api/user.js'
 
+// 图片基础路径
+const baseURL = '/api'
+
 const loading = ref(false)
 const auditList = ref([])
 const page = ref({ pageNum: 1, pageSize: 10, total: 0 })
@@ -17,13 +20,31 @@ const schoolMap = ref({})
 const detailDialog = ref(false)
 const currentRow = ref(null)
 const rejectReason = ref('')
+// 存储原始头像地址（用于提交接口）
+let originAvatarUrl = ''
 
 let timer = null
 
+// 加载学校列表：优先取 localStorage，无则请求接口并缓存
 const loadSchoolList = async () => {
+  // 先读取本地缓存
+  const localSchool = localStorage.getItem('schoolList')
+  if (localSchool) {
+    const raw = JSON.parse(localSchool)
+    const map = {}
+    Object.values(raw).forEach(item => {
+      map[item.id] = item.school_name
+    })
+    schoolMap.value = map
+    return
+  }
+
+  // 本地无数据，请求接口
   try {
     const res = await getSchoolListApi()
     if (res.code === 200) {
+      // 存入 localStorage
+      localStorage.setItem('schoolList', JSON.stringify(res.data))
       const raw = res.data
       const map = {}
       Object.values(raw).forEach(item => {
@@ -87,21 +108,28 @@ const updateRemainTime = () => {
 }
 
 const openDetail = (row) => {
-  currentRow.value = row
+  // 深拷贝行数据，不修改原列表
+  currentRow.value = { ...row }
+  // 保存原始地址
+  originAvatarUrl = row.avatarUrl
   rejectReason.value = row.rejectReason || ''
+
+  // 仅展示用：拼接图片地址（有值才拼接）
+  if (currentRow.value.avatarUrl && !currentRow.value.avatarUrl.startsWith('http')) {
+    currentRow.value.avatarUrl = baseURL + currentRow.value.avatarUrl
+  }
   detailDialog.value = true
 }
 
-// ======================
-// 审核通过（已修改响应逻辑）
-// ======================
+// 审核通过
 const passAudit = async () => {
   try {
     await ElMessageBox.confirm('确认通过该用户信息修改？')
     let data = {
       id: currentRow.value.id,
       username: currentRow.value.username,
-      avatarUrl: currentRow.value.avatarUrl,
+      // 接口提交使用原始地址，avatarUrl 为 null 原样传递
+      avatarUrl: originAvatarUrl,
       school: currentRow.value.school,
       originalUsername: currentRow.value.originalUsername,
       email: currentRow.value.email,
@@ -111,7 +139,7 @@ const passAudit = async () => {
       rejectReason: ''
     }
     const res = await auditUserInfoChangeApi(data)
-    
+
     if (res.code === 200) {
       ElMessage.success('审核成功')
       detailDialog.value = false
@@ -124,9 +152,7 @@ const passAudit = async () => {
   }
 }
 
-// ======================
-// 审核驳回（已修改响应逻辑）
-// ======================
+// 审核驳回
 const rejectAudit = async () => {
   if (!rejectReason.value.trim()) {
     return ElMessage.warning('请输入驳回原因')
@@ -134,7 +160,8 @@ const rejectAudit = async () => {
   let data = {
     id: currentRow.value.id,
     username: currentRow.value.username,
-    avatarUrl: currentRow.value.avatarUrl,
+    // 接口提交使用原始地址，avatarUrl 为 null 原样传递
+    avatarUrl: originAvatarUrl,
     school: currentRow.value.school,
     originalUsername: currentRow.value.originalUsername,
     email: currentRow.value.email,
@@ -146,7 +173,7 @@ const rejectAudit = async () => {
 
   try {
     const res = await auditUserInfoChangeApi(data)
-    
+
     if (res.code === 200) {
       ElMessage.success('已驳回')
       detailDialog.value = false
@@ -174,29 +201,26 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- 🔥 美化后的审核弹窗 -->
+  <!-- 审核弹窗 -->
   <el-dialog v-model="detailDialog" title="用户信息修改审核" width="580px" :close-on-click-modal="false">
     <div v-if="currentRow" class="audit-detail-card">
-      <div class="info-item">
-        <span class="label">修改前用户名：</span>
-        <span class="value">{{ currentRow.originalUsername }}</span>
-      </div>
 
       <div class="info-item">
         <span class="label">修改后用户名：</span>
         <span class="value">{{ currentRow.username }}</span>
       </div>
 
-      <div class="info-item">
+      <!-- 学校：原始学校 和 当前学校 不一致才展示 -->
+      <div class="info-item" v-if="currentRow.originalSchool !== currentRow.school">
         <span class="label">修改后学校：</span>
         <span class="value">{{ schoolMap[currentRow.school] || '未知学校' }}</span>
       </div>
 
-      <!-- 🔥 头像区域独立排版，彻底解决错乱 -->
-      <div class="avatar-section">
+      <!-- 头像区域：avatarUrl 不为 null/空 才展示 -->
+      <div class="avatar-section" v-if="currentRow.avatarUrl">
         <span class="label">修改后头像：</span>
-        <el-image 
-          :src="currentRow.avatarUrl" 
+        <el-image
+          :src="currentRow.avatarUrl"
           class="avatar-preview"
           fit="cover"
           lazy
@@ -206,9 +230,9 @@ onUnmounted(() => {
       <!-- 驳回原因 -->
       <div class="reject-section">
         <span class="label">驳回原因：</span>
-        <el-input 
-          v-model="rejectReason" 
-          type="textarea" 
+        <el-input
+          v-model="rejectReason"
+          type="textarea"
           rows="4"
           placeholder="请输入驳回原因"
         />
@@ -261,7 +285,13 @@ onUnmounted(() => {
           style="width:100%"
           class="glass-table"
         >
-          <el-table-column label="原用户名" prop="originalUsername" align="center" />
+          <!-- 替换为序号列 -->
+          <el-table-column label="序号" align="center" width="80">
+            <template #default="{ $index }">
+              {{ (page.pageNum - 1) * page.pageSize + $index + 1 }}
+            </template>
+          </el-table-column>
+
           <el-table-column label="剩余处理时间" align="center">
             <template #default="{ row }">
               <span v-html="row.remainTimeText"></span>
@@ -295,7 +325,6 @@ onUnmounted(() => {
 <style scoped>
 :root { --blur: blur(12px); --alpha-bg: rgba(255,255,255,0.35); --alpha-border: rgba(255,255,255,0.45); }
 
-/* 🔥 审核弹窗美化样式 */
 .audit-detail-card {
   padding: 12px 8px;
 }
@@ -315,7 +344,6 @@ onUnmounted(() => {
   flex: 1;
 }
 
-/* 头像区域独立布局，不再错乱 */
 .avatar-section {
   margin: 20px 0;
 }
@@ -330,7 +358,6 @@ onUnmounted(() => {
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
 }
 
-/* 驳回原因 */
 .reject-section {
   margin-top: 20px;
 }
@@ -339,14 +366,12 @@ onUnmounted(() => {
   margin-bottom: 10px;
 }
 
-/* 底部按钮居中对齐 */
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
 }
 
-/* 原有样式保留 */
 .panel-loading { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.15); backdrop-filter:blur(6px); border-radius:20px; display:flex; align-items:center; justify-content:center; z-index:10; }
 .loading-box { display:flex; align-items:center; gap:12px; padding:20px 32px; border-radius:16px; background:var(--alpha-bg); backdrop-filter:var(--blur); border:1px solid var(--alpha-border); color:#fff; font-size:16px; font-weight:500; }
 .loading-spin { width:20px; height:20px; border:2px solid rgba(255,255,255,0.3); border-top:2px solid #fff; border-radius:50%; animation:spin 0.8s linear infinite; }
