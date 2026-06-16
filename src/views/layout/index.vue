@@ -1,6 +1,17 @@
 <script setup>
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { User, SwitchButton, Promotion, Histogram } from '@element-plus/icons-vue';
+// 引入全部需要的侧边栏图标
+import {
+  User,
+  SwitchButton,
+  House,
+  Histogram,
+  Box,
+  UserFilled,
+  DocumentChecked,
+  Document,
+  Tickets
+} from '@element-plus/icons-vue';
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { logoutApi } from '@/api/login.js';
@@ -93,25 +104,25 @@ const logOut = () => {
         <el-aside class="glass-aside">
           <el-menu router active-menu="/index" class="glass-menu">
             <el-menu-item index="/index">
-              <el-icon><Promotion /></el-icon>首页
+              <el-icon><House /></el-icon>首页
             </el-menu-item>
             <el-menu-item index="/dashboard">
               <el-icon><Histogram /></el-icon>数据看板
             </el-menu-item>
             <el-menu-item index="/goods">
-              <el-icon><Histogram /></el-icon>处理待审核商品
+              <el-icon><Box /></el-icon>处理待审核商品
             </el-menu-item>
             <el-menu-item index="/user">
-              <el-icon><Histogram /></el-icon>用户账号管理
+              <el-icon><UserFilled /></el-icon>用户账号管理
             </el-menu-item>
             <el-menu-item index="/auditUserInfo">
-              <el-icon><Histogram /></el-icon>用户修改信息审核
+              <el-icon><DocumentChecked /></el-icon>用户修改信息审核
             </el-menu-item>
             <el-menu-item index="/post">
-              <el-icon><Histogram /></el-icon>平台帖子管理
+              <el-icon><Document /></el-icon>平台帖子管理
             </el-menu-item>
             <el-menu-item index="/orderOperate">
-              <el-icon><Histogram /></el-icon>订单管理
+              <el-icon><Tickets /></el-icon>订单管理
             </el-menu-item>
           </el-menu>
         </el-aside>

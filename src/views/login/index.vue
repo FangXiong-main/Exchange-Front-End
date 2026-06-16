@@ -69,7 +69,7 @@ onMounted(() => {
 
         <el-form-item>
           <el-button class="glass-btn" type="primary" @click="onLogin">登 录</el-button>
-          <el-button class="glass-btn" type="info" @click="resetForm">重 置</el-button>
+          <el-button class="glass-btn" type="info" @click="resetForm">清 空</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -149,7 +149,7 @@ onMounted(() => {
 #container {
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(120deg, #bde9ff, #46c4ff, #00d5ff, #0163a9);
+  background: linear-gradient(120deg, #71d0ff, #46c4ff, #00d5ff, #0163a9);
   background-size: 400% 400%;
   animation: bgGradient 12s ease infinite;
   display: flex;
